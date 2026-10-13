@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ByteBender: Optymalizator Kodu</title>
+    <!-- Tailwind CSS dla nowoczesnego i responsywnego wyglądu -->
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <!-- Google Fonts: Fira Code oraz Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600;700&family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0d1117;
+            color: #c9d1d9;
+        }
+        .code-font {
+            font-family: 'Fira Code', monospace;
+        }
+        /* Dodatkowe animacje i efekty retro terminala */
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 15px rgba(59, 130, 246, 0.3); }
+            50% { box-shadow: 0 0 25px rgba(59, 130, 246, 0.6); }
+        }
+        .terminal-glow {
+            animation: pulse-glow 3s infinite;
+        }
+        /* Custom scrollbar dla edytora kodu */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #161b22;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #30363d;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #484f58;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between selection:bg-cyan-500 selection:text-black">
+
+    <!-- NAGŁÓWEK -->
+    <header class="bg-[#161b22] border-b border-[#30363d] px-6 py-4 flex flex-wrap justify-between items-center shadow-md">
+        <div class="flex items-center space-x-3">
+            <div class="w-10 h-10 rounded-lg bg-cyan-500/10 border border-cyan-500 flex items-center justify-center text-cyan-400 font-bold text-xl code-font">
+                &gt;_
+            </div>
+            <div>
+                <h1 class="text-xl font-extrabold text-white tracking-wider flex items-center gap-2">
+                    BYTE<span class="text-cyan-400">BENDER</span>
+                    <span class="text-xs bg-cyan-500/20 text-cyan-300 px-2 py-0.5 rounded border border-cyan-500/30 uppercase font-mono">v1.0.4</span>
+                </h1>
+                <p class="text-xs text-gray-400">Architektura Maszynowa i Optymalizacja Algorytmów</p>
+            </div>
+        </div>
+        
+        <div class="flex items-center space-x-4 mt-2 sm:mt-0">
+            <div class="bg-[#0d1117] px-4 py-2 rounded-lg border border-[#30363d] flex items-center space-x-3 text-sm">
+                <div>Statut: <span id="user-rank" class="text-yellow-400 font-bold">Młodszy Technik</span></div>
+                <div class="h-4 w-px bg-[#30363d]"></div>
+                <div>Wynik: <span id="total-score" class="text-cyan-400 font-bold font-mono">0</span> pkt</div>
+            </div>
+            <button onclick="openHelpModal()" class="bg-[#21262d] hover:bg-[#30363d] text-gray-200 px-3 py-2 rounded-lg border border-[#30363d] text-sm font-semibold transition cursor-pointer flex items-center gap-1.5">
+                <svg class="w-4 h-4 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                Instrukcja
+            </button>
+        </div>
+    </header>
+
+    <!-- GŁÓWNA ZAWARTOŚĆ -->
+    <main class="flex-grow max-w-7xl w-full mx-auto p-4 sm:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+        <!-- LEWA KOLUMNA: Edytor i Instrukcje (7 kolumn) -->
+        <div class="lg:col-span-7 flex flex-col space-y-4">
+            
+            <!-- Panel Misji / Briefing -->
+            <div class="bg-[#161b22] border border-[#30363d] rounded-xl p-4 shadow-lg">
+                <div class="flex justify-between items-start mb-2">
+                    <div class="flex items-center space-x-2">
+                        <span id="level-badge" class="bg-blue-600/20 text-blue-400 border border-blue-500/30 text-xs px-2.5 py-1 rounded font-mono font-bold">POZIOM 1/6</span>
+                        <h2 id="level-title" class="text-lg font-bold text-white">Przetwarzanie Strumienia Danych</h2>
+                    </div>
+                    <span id="level-diff" class="text-xs text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20 font-mono">Łatwy</span>
+                </div>
+                <p id="level-desc" class="text-sm text-gray-300 mb-3 leading-relaxed">
+                    Załaduj dane wejściowe do rejestru, przefiltruj je i przekaż do wyjścia zgodnie z wymaganiami.
+                </p>
+                
+                <!-- Ograniczenia i cele -->
+                <div class="grid grid-cols-2 gap-3 pt-3 border-t border-[#30363d] text-xs">
+                    <div class="flex items-center space-x-2">
+                        <span class="text-gray-400">Limit instrukcji:</span>
+                        <span id="limit-inst" class="text-cyan-400 font-mono font-bold">Max 5 linijek</span>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <span class="text-gray-400">Cel pamięciowy:</span>
+                        <span id="limit-cycles" class="text-yellow-400 font-mono font-bold">Max 20 cykli</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Edytor Kodu Assembly (Pseudo-ASM) -->
+            <div class="bg-[#161b22] border border-[#30363d] rounded-xl flex flex-col shadow-lg overflow-hidden flex-grow terminal-glow">
+                <!-- Pasek okna edytora -->
+                <div class="bg-[#21262d] px-4 py-2 border-b border-[#30363d] flex justify-between items-center text-xs">
+                    <div class="flex items-center space-x-2">
+                        <div class="flex space-x-1.5">
+                            <div class="w-3 h-3 rounded-full bg-red-500/80"></div>
+                            <div class="w-3 h-3 rounded-full bg-yellow-500/80"></div>
+                            <div class="w-3 h-3 rounded-full bg-green-500/80"></div>
+                        </div>
+                        <span class="text-gray-300 code-font font-semibold ml-2">program.asm</span>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <button onclick="insertInstruction('MOV')" class="bg-[#30363d] hover:bg-[#484f58] text-gray-200 px-2 py-1 rounded text-[11px] code-font transition cursor-pointer">MOV</button>
+                        <button onclick="insertInstruction('ADD')" class="bg-[#30363d] hover:bg-[#484f58] text-gray-200 px-2 py-1 rounded text-[11px] code-font transition cursor-pointer">ADD</button>
+                        <button onclick="insertInstruction('SUB')" class="bg-[#30363d] hover:bg-[#484f58] text-gray-200 px-2 py-1 rounded text-[11px] code-font transition cursor-pointer">SUB</button>
+                        <button onclick="insertInstruction('JUMP')" class="bg-[#30363d] hover:bg-[#484f58] text-gray-200 px-2 py-1 rounded text-[11px] code-font transition cursor-pointer">JUMP</button>
+                        <button onclick="insertInstruction('TEST')" class="bg-[#30363d] hover:bg-[#484f58] text-gray-200 px-2 py-1 rounded text-[11px] code-font transition cursor-pointer">TEST</button>
+                    </div>
+                </div>
+
+                <!-- Textarea z liniami -->
+                <div class="relative flex-grow flex bg-[#0d1117]">
+                    <textarea id="code-editor" class="w-full h-72 sm:h-96 p-4 code-font text-sm text-cyan-300 bg-transparent resize-none focus:outline-none leading-relaxed" placeholder="Wpisz kod assemblerowy tutaj... np.&#10;INP ACC&#10;OUT ACC" spellcheck="false" oninput="updateLineNumbers()"></textarea>
+                </div>
+
+                <!-- Pasek akcji edytora -->
+                <div class="bg-[#161b22] px-4 py-3 border-t border-[#30363d] flex flex-wrap justify-between items-center gap-3">
+                    <div class="flex items-center space-x-2 text-xs text-gray-400">
+                        <span>Aktywne instrukcje: <strong id="line-count" class="text-white font-mono">0</strong></span>
+                    </div>
+                    <div class="flex items-center space-x-3">
+                        <button onclick="resetEditorCode()" class="bg-[#21262d] hover:bg-[#30363d] text-gray-300 px-3 py-2 rounded-lg text-xs font-semibold transition cursor-pointer border border-[#30363d]">Wyczyść</button>
+                        <button onclick="runSimulation('step')" class="bg-[#21262d] hover:bg-[#30363d] text-cyan-400 px-3 py-2 rounded-lg text-xs font-semibold transition cursor-pointer border border-cyan-500/30 flex items-center gap-1.5">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 5l7 7-7 7M5 5l7 7-7 7"></path></svg>
+                            Krok po kroku
+                        </button>
+                        <button onclick="runSimulation('run')" class="bg-cyan-600 hover:bg-cyan-500 text-black font-bold px-4 py-2 rounded-lg text-xs transition cursor-pointer shadow-lg shadow-cyan-600/20 flex items-center gap-1.5">
+                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                            Uruchom Test
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- PRAWA KOLUMNA: Wizualizacja Maszyny i IO (5 kolumn) -->
+        <div class="lg:col-span-5 flex flex-col space-y-4">
+            
+            <!-- Pamięć i Rejestry -->
+            <div class="bg-[#161b22] border border-[#30363d] rounded-xl p-4 shadow-lg flex flex-col space-y-4">
+                <h3 class="text-xs font-bold uppercase tracking-wider text-gray-400 flex items-center justify-between">
+                    <span>Stan Procesora (CPU Core)</span>
+                    <span id="cpu-status" class="text-yellow-400 font-mono text-[11px] bg-yellow-500/10 px-2 py-0.5 rounded border border-yellow-500/20">BEZCZYNNY</span>
+                </h3>
+
+                <!-- Rejestry główne -->
+                <div class="grid grid-cols-3 gap-3">
+                    <div class="bg-[#0d1117] border border-[#30363d] rounded-lg p-3 text-center">
+                        <div class="text-[11px] text-gray-400 mb-1 font-mono">ACC (Akumulator)</div>
+                        <div id="reg-acc" class="text-xl font-bold code-font text-cyan-400">0</div>
+                    </div>
+                    <div class="bg-[#0d1117] border border-[#30363d] rounded-lg p-3 text-center">
+                        <div class="text-[11px] text-gray-400 mb-1 font-mono">BAK (Zapas)</div>
+                        <div id="reg-bak" class="text-xl font-bold code-font text-purple-400">0</div>
+                    </div>
+                    <div class="bg-[#0d1117] border border-[#30363d] rounded-lg p-3 text-center">
+                        <div class="text-[11px] text-gray-400 mb-1 font-mono">CYKLE</div>
+                        <div id="reg-cycles" class="text-xl font-bold code-font text-yellow-400">0</div>
+                    </div>
+                </div>
+
+                <!-- Strumienie WE / WY -->
+                <div class="grid grid-cols-2 gap-4 pt-2 border-t border-[#30363d]">
+                    <div>
+                        <div class="text-xs font-semibold text-gray-400 mb-2 flex justify-between">
+                            <span>WEJŚCIE (IN)</span>
+                            <span id="in-count" class="font-mono text-[11px] text-gray-500">0/0</span>
+                        </div>
+                        <div id="input-stream" class="bg-[#0d1117] border border-[#30363d] rounded-lg p-2 h-20 overflow-y-auto flex flex-wrap gap-1.5 items-start content-start">
+                            <!-- Generowane dynamicznie -->
+                        </div>
+                    </div>
+                    <div>
+                        <div class="text-xs font-semibold text-gray-400 mb-2 flex justify-between">
+                            <span>WYJŚCIE (OUT)</span>
+                            <span id="out-count" class="font-mono text-[11px] text-gray-500">0/0</span>
+                        </div>
+                        <div id="output-stream" class="bg-[#0d1117] border border-[#30363d] rounded-lg p-2 h-20 overflow-y-auto flex flex-wrap gap-1.5 items-start content-start">
+                            <!-- Generowane dynamicznie -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Oczekiwane Wyjście -->
+                <div>
+                    <div class="text-xs font-semibold text-gray-400 mb-1 flex justify-between">
+                        <span>OCZEKWANY REZULTAT (TARGET)</span>
+                    </div>
+                    <div id="target-stream" class="bg-[#0d1117] border border-[#30363d] rounded-lg p-2 h-14 overflow-y-auto flex flex-wrap gap-1.5 items-start content-start">
+                        <!-- Generowane dynamicznie -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Konsola / Logi Wyniku -->
+            <div class="bg-[#161b22] border border-[#30363d] rounded-xl p-4 shadow-lg flex-grow flex flex-col">
+                <h3 class="text-xs font-bold uppercase tracking-wider text-gray-400 mb-2">Konsola Diagnostyczna</h3>
+                <div id="console-output" class="bg-[#0d1117] border border-[#30363d] rounded-lg p-3 code-font text-xs text-gray-300 h-32 overflow-y-auto space-y-1">
+                    <div class="text-gray-500">// System zainicjalizowany pomyślnie. Gotowy do kompilacji.</div>
+                </div>
+            </div>
+
+            <!-- Nawigacja Poziomów -->
+            <div class="bg-[#161b22] border border-[#30363d] rounded-xl p-4 shadow-lg flex justify-between items-center">
+                <button onclick="changeLevel(-1)" class="bg-[#21262d] hover:bg-[#30363d] text-gray-300 px-3 py-2 rounded-lg text-xs font-semibold transition cursor-pointer border border-[#30363d]">Poprzedni</button>
+                <div id="level-dots" class="flex space-x-1.5">
+                    <!-- Kropki poziomu -->
+                </div>
+                <button onclick="changeLevel(1)" class="bg-[#21262d] hover:bg-[#30363d] text-gray-300 px-3 py-2 rounded-lg text-xs font-semibold transition cursor-pointer border border-[#30363d]">Następny</button>
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- MODAL INSTRUKCJI / POMOCY -->
+    <div id="help-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-[#161b22] border border-[#30363d] rounded-2xl max-w-xl w-full p-6 shadow-2xl relative">
+            <button onclick="closeHelpModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white text-lg font-bold cursor-pointer">✕</button>
+            <h2 class="text-xl font-bold text-white mb-3 flex items-center gap-2">
+                <span class="text-cyan-400">&gt;_</span> Podręcznik Operatora ByteBender
+            </h2>
+            <div class="text-sm text-gray-300 space-y-3 max-h-[60vh] overflow-y-auto pr-2 leading-relaxed">
+                <p>Witaj w systemie symulacji architektur niskopoziomowych. Twoim zadaniem jest zaprogramowanie procesora w uproszczonym języku Assembly, aby przetworzyć dane wejściowe na wyjściowe zgodnie z wytycznymi misji.</p>
+                
+                <h3 class="text-white font-bold mt-2">Dostępne Instrukcje:</h3>
+                <ul class="list-disc pl-5 space-y-1 text-xs font-mono">
+                    <li><strong class="text-cyan-400">INP ACC</strong> – Pobiera następną wartość z wejścia do rejestru ACC.</li>
+                    <li><strong class="text-cyan-400">OUT ACC</strong> – Wysyła wartość z ACC na wyjście.</li>
+                    <li><strong class="text-cyan-400">MOV X Y</strong> – Kopiuje wartość z X do Y (X, Y mogą być: ACC, BAK lub stała liczba).</li>
+                    <li><strong class="text-cyan-400">ADD X</strong> – Dodaje wartość X do rejestru ACC.</li>
+                    <li><strong class="text-cyan-400">SUB X</strong> – Odejmuje wartość X od rejestru ACC.</li>
+                    <li><strong class="text-cyan-400">JUMP ETIQ</strong> – Skacze bezwarunkowo do etykiety (np. <code class="text-yellow-400">START:</code>).</li>
+                    <li><strong class="text-cyan-400">JZ/JNZ ETIQ</strong> – Skacze, gdy ACC jest równe zero (JZ) lub różne od zera (JNZ).</li>
+                </ul>
+
+                <h3 class="text-white font-bold mt-2">Wskazówki dla Technika:</h3>
+                <p class="text-xs">Zwracaj uwagę na limity instrukcji oraz maksymalną liczbę cykli procesora. Bardziej optymalny kod daje wyższy wynik punktowy!</p>
+            </div>
+            <div class="mt-6 flex justify-end">
+                <button onclick="closeHelpModal()" class="bg-cyan-600 hover:bg-cyan-500 text-black font-bold px-5 py-2 rounded-lg text-xs cursor-pointer">Rozumiem, do dzieła</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL SUKCESU POZIOMU -->
+    <div id="success-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-[#161b22] border border-emerald-500/50 rounded-2xl max-w-md w-full p-6 shadow-2xl text-center relative">
+            <div class="w-16 h-16 bg-emerald-500/10 border border-emerald-500 text-emerald-400 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl font-bold">✓</div>
+            <h2 class="text-2xl font-extrabold text-white mb-1">Poziom Zaliczony!</h2>
+            <p class="text-xs text-gray-400 mb-4">Algorytm przeszedł weryfikację pomyślnie.</p>
+            
+            <div class="bg-[#0d1117] border border-[#30363d] rounded-xl p-4 mb-6 space-y-2 text-sm">
+                <div class="flex justify-between">
+                    <span class="text-gray-400">Zużyte cykle:</span>
+                    <span id="succ-cycles" class="text-yellow-400 font-mono font-bold">12</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-gray-400">Linijki kodu:</span>
+                    <span id="succ-lines" class="text-cyan-400 font-mono font-bold">4</span>
+                </div>
+                <div class="flex justify-between pt-2 border-t border-[#30363d]">
+                    <span class="text-gray-200 font-semibold">Przyznane punkty:</span>
+                    <span id="succ-score" class="text-emerald-400 font-mono font-bold text-lg">+150</span>
+                </div>
+            </div>
+
+            <div class="flex space-x-3">
+                <button onclick="closeSuccessModal(false)" class="flex-1 bg-[#21262d] hover:bg-[#30363d] text-gray-300 font-semibold py-2.5 rounded-xl text-xs cursor-pointer border border-[#30363d]">Edytuj kod</button>
+                <button onclick="closeSuccessModal(true)" class="flex-1 bg-emerald-600 hover:bg-emerald-500 text-black font-bold py-2.5 rounded-xl text-xs cursor-pointer shadow-lg shadow-emerald-600/20">Następny Poziom</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- STOPKA -->
+    <footer class="bg-[#161b22] border-t border-[#30363d] px-6 py-3 text-center text-xs text-gray-500">
+        ByteBender Educational Engine &bull; Stworzono dla uczniów szkół technicznych
+    </footer>
+
+    <!-- SKRYPT LOGIKI GRY -->
+    <script>
+        // Definicja poziomów gry
+        const levels = [
+            {
+                id: 1,
+                title: "Podwójnik Strumienia",
+                diff: "Łatwy",
+                diffClass: "text-emerald-400 bg-emerald-500/10 border-emerald-500/20",
+                desc: "Odczytaj każdą liczbę z wejścia i przepisz ją dwukrotnie na wyjście (np. wejście: 5 -> wyjście: 5, 5).",
+                input: [3, 7, 12, -4],
+                target: [3, 3, 7, 7, 12, 12, -4, -4],
+                maxInst: 6,
+                maxCycles: 30,
+                defaultCode: "START:\nINP ACC\nOUT ACC\nOUT ACC\nJUMP START"
+            },
+            {
+                id: 2,
+                title: "Filtr Dodatnich Wartości",
+                diff: "Średni",
+                diffClass: "text-yellow-400 bg-yellow-500/10 border-yellow-500/20",
+                desc: "Przetestuj liczby z wejścia. Jeśli liczba jest większa od zera, wyślij ją. Jeśli jest mniejsza lub równa zero, zignoruj ją.",
+                input: [5, -2, 8, 0, -9, 14],
+                target: [5, 8, 14],
+                maxInst: 8,
+                maxCycles: 40,
+                defaultCode: "START:\nINP ACC\nJZ START\nOUT ACC\nJUMP START"
+            },
+            {
+                id: 3,
+                title: "Akumulator Sumujący",
+                diff: "Średni",
+                diffClass: "text-yellow-400 bg-yellow-500/10 border-yellow-500/20",
+                desc: "Pobierz dwie liczby z wejścia, dodaj je do siebie i wyślij ich sumę na wyjście. Powtórz dla wszystkich par.",
+                input: [2, 3, 10, 20, -5, 15],
+                target: [5, 30, 10],
+                maxInst: 8,
+                maxCycles: 35,
+                defaultCode: "START:\nINP ACC\nMOV ACC BAK\nINP ACC\nADD BAK\nOUT ACC\nJUMP START"
+            },
+            {
+                id: 4,
+                title: "Moduł Wartości Bezwzględnej",
+                diff: "Zaawansowany",
+                diffClass: "text-orange-400 bg-orange-500/10 border-orange-500/20",
+                desc: "Dla każdej liczby wejściowej oblicz jej wartość bezwzględną (|x|) i wyślij na wyjście.",
+                input: [-7, 4, -15, 0, 9, -3],
+                target: [7, 4, 15, 0, 9, 3],
+                maxInst: 12,
+                maxCycles: 50,
+                defaultCode: "START:\nINP ACC\nOUT ACC\nJUMP START"
+            },
+            {
+                id: 5,
+                title: "Mnożnik Przez Dwa",
+                diff: "Zaawansowany",
+                diffClass: "text-orange-400 bg-orange-500/10 border-orange-500/20",
+                desc: "Pomnóż każdą liczbę wejściową przez 2 (wykorzystaj operację dodawania do samego siebie) i wyślij wynik.",
+                input: [4, -3, 8, 0, 15],
+                target: [8, -6, 16, 0, 30],
+                maxInst: 8,
+                maxCycles: 40,
+                defaultCode: "START:\nINP ACC\nMOV ACC BAK\nADD BAK\nOUT ACC\nJUMP START"
+            },
+            {
+                id: 6,
+                title: "Kryptograficzny Inwerter",
+                diff: "Ekspert",
+                diffClass: "text-red-400 bg-red-500/10 border-red-500/20",
+                desc: "Odwróć znak każdej liczby wejściowej (pomnóż przez -1) i przekaż dalej.",
+                input: [10, -25, 42, 0, -3],
+                target: [-10, 25, -42, 0, 3],
+                maxInst: 10,
+                maxCycles: 45,
+                defaultCode: "START:\nINP ACC\nSUB ACC\nSUB ACC\nOUT ACC\nJUMP START"
+            }
+        ];
+
+        let currentLevelIndex = 0;
+        let totalScore = 0;
+
+        // Inicjalizacja gry pozaładowaniu strony
+        window.onload = function() {
+            renderLevelDots();
+            loadLevel(currentLevelIndex);
+        };
+
+        function renderLevelDots() {
+            const container = document.getElementById('level-dots');
+            container.innerHTML = '';
+            levels.forEach((lvl, idx) => {
+                const dot = document.createElement('button');
+                dot.className = `w-3 h-3 rounded-full transition cursor-pointer ${idx === currentLevelIndex ? 'bg-cyan-400 scale-125' : 'bg-[#30363d] hover:bg-gray-500'}`;
+                dot.onclick = () => { currentLevelIndex = idx; loadLevel(currentLevelIndex); };
+                container.appendChild(dot);
+            });
+        }
+
+        function loadLevel(index) {
+            const lvl = levels[index];
+            document.getElementById('level-badge').innerText = `POZIOM ${lvl.id}/${levels.length}`;
+            document.getElementById('level-title').innerText = lvl.title;
+            document.getElementById('level-desc').innerText = lvl.desc;
+            
+            const diffEl = document.getElementById('level-diff');
+            diffEl.innerText = lvl.diff;
+            diffEl.className = `text-xs px-2 py-0.5 rounded border font-mono ${lvl.diffClass}`;
+
+            document.getElementById('limit-inst').innerText = `Max ${lvl.maxInst} linijek`;
+            document.getElementById('limit-cycles').innerText = `Max ${lvl.maxCycles} cykli`;
+
+            document.getElementById('code-editor').value = lvl.defaultCode;
+            
+            renderStreams(lvl.input, lvl.target, [], []);
+            updateLineNumbers();
+            resetCpuDisplay();
+            logConsole(`// Załadowano poziom ${lvl.id}: ${lvl.title}`);
+            renderLevelDots();
+        }
+
+        function changeLevel(dir) {
+            currentLevelIndex += dir;
+            if (currentLevelIndex < 0) currentLevelIndex = 0;
+            if (currentLevelIndex >= levels.length) currentLevelIndex = levels.length - 1;
+            loadLevel(currentLevelIndex);
+        }
+
+        function updateLineNumbers() {
+            const editor = document.getElementById('code-editor');
+            const lines = editor.value.split('\n').filter(l => l.trim() !== '');
+            document.getElementById('line-count').innerText = lines.length;
+        }
+
+        function insertInstruction(instName) {
+            const editor = document.getElementById('code-editor');
+            let template = "";
+            if (instName === 'MOV') template = "MOV ACC BAK";
+            else if (instName === 'ADD' || instName === 'SUB') template = `${instName} BAK`;
+            else if (instName === 'JUMP') template = "JUMP START";
+            else if (instName === 'TEST') template = "JZ START";
+            else template = `${instName} ACC`;
+
+            editor.value += (editor.value.endsWith('\n') || editor.value === '' ? '' : '\n') + template;
+            updateLineNumbers();
+        }
+
+        function resetEditorCode() {
+            document.getElementById('code-editor').value = levels[currentLevelIndex].defaultCode;
+            updateLineNumbers();
+            logConsole("// Zresetowano kod edytora do wartości domyślnych.");
+        }
+
+        function renderStreams(input, target, currentInput, currentOutput) {
+            const inContainer = document.getElementById('input-stream');
+            inContainer.innerHTML = '';
+            input.forEach((val, idx) => {
+                const isProcessed = idx < currentInput.length;
+                const el = document.createElement('div');
+                el.className = `w-8 h-8 rounded flex items-center justify-center font-mono text-xs font-bold border ${isProcessed ? 'bg-[#161b22] border-[#30363d] text-gray-600 line-through' : 'bg-[#21262d] border-cyan-500/30 text-cyan-400'}`;
+                el.innerText = val;
+                inContainer.appendChild(el);
+            });
+            document.getElementById('in-count').innerText = `${currentInput.length}/${input.length}`;
+
+            const outContainer = document.getElementById('output-stream');
+            outContainer.innerHTML = '';
+            currentOutput.forEach((val, idx) => {
+                const match = target[idx] === val;
+                const el = document.createElement('div');
+                el.className = `w-8 h-8 rounded flex items-center justify-center font-mono text-xs font-bold border ${match ? 'bg-emerald-500/10 border-emerald-500 text-emerald-400' : 'bg-red-500/10 border-red-500 text-red-400'}`;
+                el.innerText = val;
+                outContainer.appendChild(el);
+            });
+            document.getElementById('out-count').innerText = `${currentOutput.length}/${target.length}`;
+
+            const targetContainer = document.getElementById('target-stream');
+            targetContainer.innerHTML = '';
+            target.forEach(val => {
+                const el = document.createElement('div');
+                el.className = `w-8 h-8 rounded bg-[#21262d] border border-[#30363d] flex items-center justify-center font-mono text-xs text-gray-300 font-bold`;
+                el.innerText = val;
+                targetContainer.appendChild(el);
+            });
+        }
+
+        function resetCpuDisplay() {
+            document.getElementById('reg-acc').innerText = '0';
+            document.getElementById('reg-bak').innerText = '0';
+            document.getElementById('reg-cycles').innerText = '0';
+            document.getElementById('cpu-status').innerText = 'BEZCZYNNY';
+            document.getElementById('cpu-status').className = 'text-yellow-400 font-mono text-[11px] bg-yellow-500/10 px-2 py-0.5 rounded border border-yellow-500/20';
+        }
+
+        function logConsole(msg) {
+            const consoleEl = document.getElementById('console-output');
+            const div = document.createElement('div');
+            div.innerText = msg;
+            consoleEl.appendChild(div);
+            consoleEl.scrollTop = consoleEl.scrollHeight;
+        }
+
+        // Kompilator i Symulator Assembly
+        function runSimulation(mode) {
+            const lvl = levels[currentLevelIndex];
+            const rawCode = document.getElementById('code-editor').value;
+            const lines = rawCode.split('\n');
+
+            // Krok 1: Parsowanie instrukcji i etykiet
+            let instructions = [];
+            let labels = {};
+            
+            for (let i = 0; i < lines.length; i++) {
+                let line = lines[i].trim();
+                if (!line || line.startsWith('//')) continue;
+                
+                if (line.endsWith(':')) {
+                    let labelName = line.slice(0, -1).trim();
+                    labels[labelName] = instructions.length;
+                    continue;
+                }
+                
+                let parts = line.split(/\s+/);
+                instructions.push({
+                    op: parts[0].toUpperCase(),
+                    arg1: parts[1] ? parts[1].toUpperCase() : null,
+                    raw: line
+                });
+            }
+
+            if (instructions.length > lvl.maxInst) {
+                logConsole(`[BŁĄD] Przekroczono limit instrukcji! (${instructions.length}/${lvl.maxInst})`);
+                return;
+            }
+
+            // Stan maszyny
+            let ACC = 0;
+            let BAK = 0;
+            let pc = 0;
+            let cycles = 0;
+            let inputQueue = [...lvl.input];
+            let consumedInputCount = 0;
+            let outputQueue = [];
+            let executionLog = [];
+
+            document.getElementById('cpu-status').innerText = 'AKTYWNY';
+            document.getElementById('cpu-status').className = 'text-emerald-400 font-mono text-[11px] bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20';
+
+            let maxCyclesAllowed = lvl.maxCycles;
+            let success = false;
+            let errorMsg = null;
+
+            while (pc >= 0 && pc < instructions.length && cycles < maxCyclesAllowed) {
+                cycles++;
+                let inst = instructions[pc];
+                
+                try {
+                    if (inst.op === 'INP') {
+                        if (inputQueue.length === 0) {
+                            errorMsg = "Przepełnienie wejścia (brak danych do pobrania)";
+                            break;
+                        }
+                        let val = inputQueue.shift();
+                        consumedInputCount++;
+                        if (inst.arg1 === 'ACC') ACC = val;
+                        else if (inst.arg1 === 'BAK') BAK = val;
+                        else throw new Error(`Nieznany rejestr docelowy: ${inst.arg1}`);
+                    } 
+                    else if (inst.op === 'OUT') {
+                        let val = 0;
+                        if (inst.arg1 === 'ACC') val = ACC;
+                        else if (inst.arg1 === 'BAK') val = BAK;
+                        else if (!isNaN(Number(inst.arg1))) val = Number(inst.arg1);
+                        else throw new Error(`Nieznana wartość do wysłania: ${inst.arg1}`);
+                        
+                        outputQueue.push(val);
+                    } 
+                    else if (inst.op === 'MOV') {
+                        let val = 0;
+                        if (inst.arg1 === 'ACC') val = ACC;
+                        else if (inst.arg1 === 'BAK') val = BAK;
+                        else if (!isNaN(Number(inst.arg1))) val = Number(inst.arg1);
+                        else throw new Error(`Nieznane źródło MOV: ${inst.arg1}`);
+
+                        let dest = instructions[pc].raw.split(/\s+/)[2];
+                        if (!dest) throw new Error("Brak argumentu docelowego dla MOV");
+                        dest = dest.toUpperCase();
+
+                        if (dest === 'ACC') ACC = val;
+                        else if (dest === 'BAK') BAK = val;
+                        else throw new Error(`Nieznany cel MOV: ${dest}`);
+                    } 
+                    else if (inst.op === 'ADD') {
+                        let val = 0;
+                        if (inst.arg1 === 'ACC') val = ACC;
+                        else if (inst.arg1 === 'BAK') val = BAK;
+                        else if (!isNaN(Number(inst.arg1))) val = Number(inst.arg1);
+                        else throw new Error(`Nieznany argument ADD: ${inst.arg1}`);
+                        ACC += val;
+                    } 
+                    else if (inst.op === 'SUB') {
+                        let val = 0;
+                        if (inst.arg1 === 'ACC') val = ACC;
+                        else if (inst.arg1 === 'BAK') val = BAK;
+                        else if (!isNaN(Number(inst.arg1))) val = Number(inst.arg1);
+                        else throw new Error(`Nieznany argument SUB: ${inst.arg1}`);
+                        ACC -= val;
+                    } 
+                    else if (inst.op === 'JUMP') {
+                        if (labels[inst.arg1] !== undefined) {
+                            pc = labels[inst.arg1];
+                            continue;
+                        } else {
+                            throw new Error(`Nieznana etykieta skoku: ${inst.arg1}`);
+                        }
+                    } 
+                    else if (inst.op === 'JZ') {
+                        if (ACC === 0) {
+                            if (labels[inst.arg1] !== undefined) {
+                                pc = labels[inst.arg1];
+                                continue;
+                            } else {
+                                throw new Error(`Nieznana etykieta skoku JZ: ${inst.arg1}`);
+                            }
+                        }
+                    } 
+                    else if (inst.op === 'JNZ') {
+                        if (ACC !== 0) {
+                            if (labels[inst.arg1] !== undefined) {
+                                pc = labels[inst.arg1];
+                                continue;
+                            } else {
+                                throw new Error(`Nieznana etykieta skoku JNZ: ${inst.arg1}`);
+                            }
+                        }
+                    } 
+                    else {
+                        throw new Error(`Nieznana instrukcja: ${inst.op}`);
+                    }
+                } catch (e) {
+                    errorMsg = e.message;
+                    break;
+                }
+
+                // Sprawdzenie czy osiągnięto docelowe wyjście
+                if (outputQueue.length === lvl.target.length) {
+                    success = true;
+                    break;
+                }
+
+                pc++;
+            }
+
+            // Aktualizacja UI po symulacji
+            document.getElementById('reg-acc').innerText = ACC;
+            document.getElementById('reg-bak').innerText = BAK;
+            document.getElementById('reg-cycles').innerText = cycles;
+
+            let currentInputSimulatedCount = lvl.input.length - inputQueue.length;
+            renderStreams(lvl.input, lvl.target, lvl.input.slice(0, currentInputSimulatedCount), outputQueue);
+
+            if (errorMsg) {
+                logConsole(`[BŁĄD RUNTIME] ${errorMsg}`);
+                document.getElementById('cpu-status').innerText = 'BŁĄD';
+                document.getElementById('cpu-status').className = 'text-red-400 font-mono text-[11px] bg-red-500/10 px-2 py-0.5 rounded border border-red-500/20';
+            } else if (success) {
+                // Sprawdź poprawność wyjścia element po elemencie
+                let correct = outputQueue.length === lvl.target.length && outputQueue.every((v, i) => v === lvl.target[i]);
+                if (correct) {
+                    logConsole(`[SUKCES] Test zakończony powodzeniem! Cykle: ${cycles}`);
+                    document.getElementById('cpu-status').innerText = 'UKOŃCZONO';
+                    document.getElementById('cpu-status').className = 'text-emerald-400 font-mono text-[11px] bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20';
+                    
+                    // Oblicz punkty
+                    let earnedScore = Math.max(50, 200 - (cycles * 2));
+                    totalScore += earnedScore;
+                    document.getElementById('total-score').innerText = totalScore;
+                    updateUserRank();
+
+                    showSuccessModal(cycles, instructions.length, earnedScore);
+                } else {
+                    logConsole(`[NIEPOWODZENIE] Wyjście nie zgadza się z oczekiwanym wzorcem.`);
+                    document.getElementById('cpu-status').innerText = 'BŁĄD DANYCH';
+                    document.getElementById('cpu-status').className = 'text-yellow-400 font-mono text-[11px] bg-yellow-500/10 px-2 py-0.5 rounded border border-yellow-500/20';
+                }
+            } else {
+                logConsole(`[TIMEOUT] Przekroczono limit cyklów (${maxCyclesAllowed}) bez osiągnięcia celu.`);
+                document.getElementById('cpu-status').innerText = 'TIMEOUT';
+                document.getElementById('cpu-status').className = 'text-red-400 font-mono text-[11px] bg-red-500/10 px-2 py-0.5 rounded border border-red-500/20';
+            }
+        }
+
+        function updateUserRank() {
+            let rankEl = document.getElementById('user-rank');
+            if (totalScore > 800) rankEl.innerText = "Architekt Systemów";
+            else if (totalScore > 500) rankEl.innerText = "Senior Programista ASM";
+            else if (totalScore > 200) rankEl.innerText = "Technik Automatyk";
+            else rankEl.innerText = "Młodszy Technik";
+        }
+
+        // Obsługa Modali
+        function openHelpModal() {
+            document.getElementById('help-modal').classList.remove('hidden');
+        }
+        function closeHelpModal() {
+            document.getElementById('help-modal').classList.add('hidden');
+        }
+
+        function showSuccessModal(cycles, lines, score) {
+            document.getElementById('succ-cycles').innerText = cycles;
+            document.getElementById('succ-lines').innerText = lines;
+            document.getElementById('succ-score').innerText = `+${score}`;
+            document.getElementById('success-modal').classList.remove('hidden');
+        }
+
+        function closeSuccessModal(advance) {
+            document.getElementById('success-modal').classList.add('hidden');
+            if (advance) {
+                if (currentLevelIndex < levels.length - 1) {
+                    currentLevelIndex++;
+                    loadLevel(currentLevelIndex);
+                } else {
+                    logConsole(`[GRATULACJE] Ukończyłeś wszystkie poziomy w grze ByteBender!`);
+                }
+            }
+        }
+    </script>
+</body>
+</html>
